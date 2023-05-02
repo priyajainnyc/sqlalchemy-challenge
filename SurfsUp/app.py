@@ -56,8 +56,8 @@ def welcome():
         f"/api/v1.0/start<br/>"
         f"/api/v1.0/start/end<br/>"
     )
-# Convert the query results to a dictionary by using date as the key and prcp as the value
-# Return the JSON representation of your dictionary
+# Query results to a dictionary by using date as the key and prcp as the value for last year in database
+# Return the JSON representation of your dictionary 
 @app.route("/api/v1.0/precipitation")
 def precipitation():
     # Create our session (link) from Python to the DB
@@ -152,15 +152,14 @@ def start_date(start):
     session = Session(engine)
     
     # Query TMIN, TAVG, TMAX for specified start for all dates greater than or equal to start date
-    start_results = session.query(measurement.date, func.min(measurement.tobs), func.avg(measurement.tobs), func.max(measurement.tobs)).filter(measurement.date >= start).all()
+    start_results = session.query(func.min(measurement.tobs), func.avg(measurement.tobs), func.max(measurement.tobs)).filter(measurement.date >= start).all()
     
     # Close session
     session.close()
 
     start_tobs = []
-    for date, min, avg, max in start_results:
+    for min, avg, max in start_results:
         start_tobs_dict = {}
-        start_tobs_dict["Date"] = date
         start_tobs_dict["TMIN"] = min
         start_tobs_dict["TAVG"] = avg
         start_tobs_dict["TMAX"] = max
@@ -179,15 +178,14 @@ def start_end_date(start, end):
     session = Session(engine)
     
     # Query TMIN, TAVG, TMAX for specified start and end date for dates from start to end date, inclusive.
-    start_end_results = session.query(measurement.date, func.min(measurement.tobs), func.avg(measurement.tobs), func.max(measurement.tobs)).filter(measurement.date >= start).filter(measurement.date <= end).all()
+    start_end_results = session.query(func.min(measurement.tobs), func.avg(measurement.tobs), func.max(measurement.tobs)).filter(measurement.date >= start).filter(measurement.date <= end).all()
     
     # Close session
     session.close()
     
     start_end_tobs = []
-    for date, min, avg, max in start_end_results:
+    for min, avg, max in start_end_results:
         start_end_tobs_dict = {}
-        start_end_tobs_dict["Date"] = date
         start_end_tobs_dict["TMIN"] = min
         start_end_tobs_dict["TAVG"] = avg
         start_end_tobs_dict["TMAX"] = max
