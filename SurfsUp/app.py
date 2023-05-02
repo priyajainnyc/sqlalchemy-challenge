@@ -63,8 +63,16 @@ def precipitation():
     # Create our session (link) from Python to the DB
     session = Session(engine)
     
+    # Find the most recent date in the data set.
+    mostrecent_date = session.query(measurement.date).order_by(measurement.date.desc()).first()
+    print(mostrecent_date)
+
+    # Calculate the date one year from the last date in data set.
+    latest_date = dt.datetime.strptime(mostrecent_date[0], '%Y-%m-%d').date()
+    start_date = latest_date - dt.timedelta(days=365)
+
     # Perform a query to retrieve all the date and precipitation values
-    prcp_data = session.query(measurement.date, measurement.prcp).all()
+    prcp_data = session.query(measurement.date, measurement.prcp).filter(measurement.date >= start_date).order_by(measurement.date).all()
 
     # Close session
     session.close()
@@ -74,7 +82,7 @@ def precipitation():
     for date, prcp in prcp_data:
         prcp_dict[date] = prcp
     
-    # Return the JSON representation of your dictionary.
+    # Return the JSON representation of your dictionary for the last year in the database.
     return jsonify(prcp_dict)
 
 # Create a route that returns a JSON list of stations from the database
@@ -144,7 +152,7 @@ def start_date(start):
     session = Session(engine)
     
     # Query TMIN, TAVG, TMAX for specified start for all dates greater than or equal to start date
-    start_results = session.query(measurement.date, func.min(measurement.tobs), func.avg(measurement.tobs), func.max(measurement.tobs)).filter(measurement.date >= start).group_by(measurement.date).all()
+    start_results = session.query(measurement.date, func.min(measurement.tobs), func.avg(measurement.tobs), func.max(measurement.tobs)).filter(measurement.date >= start).all()
     
     # Close session
     session.close()
@@ -171,7 +179,7 @@ def start_end_date(start, end):
     session = Session(engine)
     
     # Query TMIN, TAVG, TMAX for specified start and end date for dates from start to end date, inclusive.
-    start_end_results = session.query(measurement.date, func.min(measurement.tobs), func.avg(measurement.tobs), func.max(measurement.tobs)).filter(measurement.date >= start).filter(measurement.date <= end).group_by(measurement.date).all()
+    start_end_results = session.query(measurement.date, func.min(measurement.tobs), func.avg(measurement.tobs), func.max(measurement.tobs)).filter(measurement.date >= start).filter(measurement.date <= end).all()
     
     # Close session
     session.close()
